@@ -44,7 +44,11 @@ func ConfigSave(config Config) error {
 	}
 
 	filePath := configFilePath()
-	file, err := os.Open(filePath)
+
+	fileDir := path.Dir(filePath)
+	os.MkdirAll(fileDir, os.ModeDir)
+
+	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 	if err != nil {
 		return err
 	}
