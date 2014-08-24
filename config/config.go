@@ -23,7 +23,7 @@ func configFilePath() string {
 	return filePath
 }
 
-func ConfigLoad() (*Config, error) {
+func Load() (*Config, error) {
 	filePath := configFilePath()
 	fileData, err := ioutil.ReadFile(filePath)
 	if err != nil {
@@ -37,7 +37,7 @@ func ConfigLoad() (*Config, error) {
 	return &config, nil
 }
 
-func ConfigSave(config Config) error {
+func Save(config Config) error {
 	data, err := json.Marshal(config)
 	if err != nil {
 		return err
