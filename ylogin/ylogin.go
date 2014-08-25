@@ -6,10 +6,6 @@ import (
 	"net/http"
 )
 
-const (
-	kLocalHttpServerPort = 30171
-)
-
 type TokenData struct {
 	token string
 }
@@ -20,16 +16,14 @@ type OauthHandler struct {
 }
 
 func (handler OauthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("query = %v\n", r.URL.RawQuery)
-	fmt.Printf("fragment = %v\n", r.URL.Fragment)
 	handler.tokenData.token = r.URL.RawQuery
 	w.Write([]byte("OK"))
 	handler.server.Shutdown <- true
 }
 
-func acquireOauthToken(tokenChan chan string) {
+func acquireOauthToken(localHttpServerPort int, tokenChan chan string) {
 	server := manners.NewServer()
-	addressString := fmt.Sprintf(":%d", kLocalHttpServerPort)
+	addressString := fmt.Sprintf(":%d", localHttpServerPort)
 	handler := OauthHandler{server: server, tokenData: &TokenData{}}
 
 	server.ListenAndServe(addressString, handler)
@@ -40,6 +34,6 @@ func acquireOauthToken(tokenChan chan string) {
 	tokenChan <- handler.tokenData.token
 }
 
-func Login(tokenChan chan string) {
-	go acquireOauthToken(tokenChan)
+func Login(localHttpServerPort int, tokenChan chan string) {
+	go acquireOauthToken(localHttpServerPort, tokenChan)
 }
