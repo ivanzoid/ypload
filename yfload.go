@@ -22,15 +22,15 @@ func openLoginPage(appId string) {
 	}
 }
 
-func getToken() string {
-	tokenChan := make(chan string)
-	ylogin.Login(kLocalHttpServerPort, tokenChan)
+func getTokenData() ylogin.TokenData {
+	tokenDataChan := make(chan ylogin.TokenData)
+	ylogin.Login(kLocalHttpServerPort, tokenDataChan)
 
 	openLoginPage(kAppId)
 
-	token := <-tokenChan
+	tokenData := <-tokenDataChan
 
-	return token
+	return tokenData
 }
 
 func main() {
@@ -40,7 +40,8 @@ func main() {
 
 	if cfg == nil {
 		fmt.Println("no oauth token")
-		token = getToken()
+		tokenData := getTokenData()
+		token = tokenData.Token
 	} else {
 		token = cfg.OauthToken
 	}
