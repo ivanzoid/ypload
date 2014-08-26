@@ -2,6 +2,7 @@ package main
 
 import (
 	"./config"
+	"./yfotki"
 	"./ylogin"
 	"fmt"
 	"github.com/skratchdot/open-golang/open"
@@ -38,8 +39,8 @@ func main() {
 
 	var token string
 
-	if cfg == nil {
-		fmt.Println("no oauth token")
+	if cfg == nil || cfg.TokenExpired() {
+		log.Printf("Getting new OAuth token...")
 		tokenData := getTokenData()
 		token = tokenData.Token
 	} else {
@@ -47,4 +48,8 @@ func main() {
 	}
 
 	fmt.Printf("token: %v\n", token)
+
+	errChan := make(chan error)
+	yfotki.UploadFile(token, "", errChan)
+	<-errChan
 }

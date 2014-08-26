@@ -6,10 +6,13 @@ import (
 	"os"
 	"os/user"
 	"path"
+	"time"
 )
 
 type Config struct {
-	OauthToken string `json:"oauthToken"`
+	OauthToken         string `json:"oauthToken"`
+	ExpirationDateTime int64  `json:"expirationDateTime"`
+	MainAlbumUrl       string `json:"mainAlbumUrl"`
 }
 
 const (
@@ -56,4 +59,13 @@ func Save(config Config) error {
 	file.Write(data)
 	file.Close()
 	return nil
+}
+
+func (config *Config) TokenExpired() bool {
+	if config.OauthToken == "" {
+		return true
+	}
+
+	expired := time.Now().After(time.Unix(config.ExpirationDateTime, 0))
+	return expired
 }
