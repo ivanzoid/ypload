@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/braintree/manners"
 	"net/http"
+	"strconv"
 )
 
 const (
@@ -31,7 +32,7 @@ const (
 
 type TokenData struct {
 	Token     string
-	ExpiresIn string
+	ExpiresIn int64
 }
 
 type OauthHandler struct {
@@ -41,15 +42,25 @@ type OauthHandler struct {
 }
 
 func (handler OauthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
 	params := r.URL.Query()
+
 	if len(params) == 0 {
 		fmt.Printf("Redirecting...\n")
 		fmt.Fprintf(w, "%v", kRedirectHtmlTemplate)
+
 	} else {
+
 		handler.tokenData.Token = params.Get(kTokenKey)
-		handler.tokenData.ExpiresIn = params.Get(kExpiresInKey)
+		expiresInString := params.Get(kExpiresInKey)
+		expiresIn, err := strconv.ParseInt(expiresInString, 10, 64)
+		if err == nil {
+			handler.tokenData.ExpiresIn = expiresIn
+		}
+
+		fmt.Printf("Got token.\n")
 		fmt.Fprintf(w, "%v", kDoneHtmlTemplate)
-		fmt.Printf("Done\n")
+
 		handler.server.Shutdown <- true
 		handler.doneChan <- true
 	}
@@ -63,8 +74,6 @@ func acquireOauthToken(localHttpServerPort int, tokenDataChan chan TokenData) {
 	go server.ListenAndServe(addressString, handler)
 
 	<-handler.doneChan
-
-	fmt.Println("TokenData: %v", handler.tokenData)
 
 	tokenDataChan <- *handler.tokenData
 }

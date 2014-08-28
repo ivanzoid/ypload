@@ -40,7 +40,7 @@ func Load() (*Config, error) {
 	return &config, nil
 }
 
-func Save(config Config) error {
+func (config *Config) Save() error {
 	data, err := json.Marshal(config)
 	if err != nil {
 		return err
@@ -49,9 +49,9 @@ func Save(config Config) error {
 	filePath := configFilePath()
 
 	fileDir := path.Dir(filePath)
-	os.MkdirAll(fileDir, os.ModeDir)
+	os.MkdirAll(fileDir, os.ModeDir|0700)
 
-	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
+	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}
@@ -68,4 +68,8 @@ func (config *Config) TokenExpired() bool {
 
 	expired := time.Now().After(time.Unix(config.ExpirationDateTime, 0))
 	return expired
+}
+
+func (config *Config) UpdateExpirationDateTime(expiresIn int64) {
+	config.ExpirationDateTime = time.Now().Add(time.Duration(expiresIn) * time.Second).Unix()
 }

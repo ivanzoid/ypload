@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"mime/multipart"
 	"net/http"
 	"os"
+	"path"
+	"strings"
 )
 
 const (
@@ -19,12 +20,20 @@ const (
 	kUploadFieldImageName   = "image"
 	kUploadFieldAccessName  = "access"
 	kUploadFieldAccessValue = "public"
+	kSizeTagXXXS            = "XXXS"
+	kSizeTagXXS             = "XXS"
+	kSizeTagXS              = "XS"
+	kSizeTagS               = "S"
+	kSizeTagM               = "M"
+	kSizeTagL               = "L"
+	kSizeTagXL              = "XL"
+	kSizeTagOrig            = "orig"
 )
 
 type UploadData struct {
-	OrigImageUrl, SmallImageUrl, LargeImageUrl, XLargeImageUrl, XxLargeImageUrl string
-	MainAlbumUrl                                                                string
-	Error                                                                       error
+	XxxSmallImageUrl, XxSmallImageUrl, XSmallImageUrl, SmallImageUrl, MediumImageUrl, LargeImageUrl, XLargeImageUrl, OrigImageUrl string
+	MainAlbumUrl                                                                                                                  string
+	Error                                                                                                                         error
 }
 
 func getMainAlbumUrl(token string) (mainAlbumUrl string, err error) {
@@ -44,8 +53,6 @@ func getMainAlbumUrl(token string) (mainAlbumUrl string, err error) {
 	err = nil
 
 	url := fmt.Sprintf("%v?%v=%v", kServiceDocumentUrl, kOauthTokenKey, token)
-
-	log.Printf("Url: %v\n", url)
 
 	response, err := http.Get(url)
 	if err != nil {
@@ -73,22 +80,24 @@ func getMainAlbumUrl(token string) (mainAlbumUrl string, err error) {
 	return
 }
 
-func doUploadFile(token, filePath, mainAlbumUrl string) (responseString string, err error) {
+func doUploadFile(token, filePath, mainAlbumUrl string) (responseData []byte, err error) {
+	var bodyBuffer bytes.Buffer
+	writer := multipart.NewWriter(&bodyBuffer)
+	formWriter, err := writer.CreateFormFile(kUploadFieldImageName, filePath)
+	if err != nil {
+		return
+	}
+
 	file, err := os.Open(filePath)
 	if err != nil {
 		return
 	}
 	defer file.Close()
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-	formWriter, err := writer.CreateFormFile(kUploadFieldImageName, filePath)
-	if err != nil {
-		return
-	}
 	_, err = io.Copy(formWriter, file)
 	if err != nil {
 		return
 	}
+
 	writer.WriteField(kUploadFieldAccessName, kUploadFieldAccessValue)
 	err = writer.Close()
 	if err != nil {
@@ -96,53 +105,103 @@ func doUploadFile(token, filePath, mainAlbumUrl string) (responseString string, 
 	}
 
 	url := fmt.Sprintf("%v?%v=%v", mainAlbumUrl, kOauthTokenKey, token)
-	request := http.NewRequest("POST", url, body)
+	request, err := http.NewRequest("POST", url, &bodyBuffer)
+	if err != nil {
+		return
+	}
+
+	request.Header.Set("Content-Type", writer.FormDataContentType())
+
 	client := &http.Client{}
 	response, err := client.Do(request)
 	if err != nil {
 		return
 	}
 	responseBodyBuffer := &bytes.Buffer{}
-	_, err = responseBodyBuffer.ReadFrom(resp.Body)
+	_, err = responseBodyBuffer.ReadFrom(response.Body)
 	if err != nil {
 		return
 	}
-	resp.Body.Close()
-	responseString = string(responseBodyBuffer)
+	response.Body.Close()
+	responseData = responseBodyBuffer.Bytes()
 	return
 }
 
-func doParseUploadResponse(responseString string) (uploadData UploadData) {
-	log.Printf("Response: %v\n", responseString)
+func doParseUploadResponse(responseData []byte, fileExtension string, uploadData *UploadData) {
+
+	type Image struct {
+		XMLName xml.Name `xml:"img"`
+		Href    string   `xml:"href,attr"`
+		Size    string   `xml:"size,attr"`
+		Height  string   `xml:"height,attr"`
+		Width   string   `xml:"width,attr"`
+	}
+
+	type Result struct {
+		XMLName xml.Name `xml:"entry"`
+		Images  []Image  `xml:"img"`
+	}
+
+	var result Result
+	uploadData.Error = xml.Unmarshal(responseData, &result)
+	if uploadData.Error != nil {
+		return
+	}
+
+	for _, image := range result.Images {
+		switch image.Size {
+		case kSizeTagXXXS:
+			uploadData.XxxSmallImageUrl = image.Href + fileExtension
+		case kSizeTagXXS:
+			uploadData.XxSmallImageUrl = image.Href + fileExtension
+		case kSizeTagXS:
+			uploadData.XSmallImageUrl = image.Href + fileExtension
+		case kSizeTagS:
+			uploadData.SmallImageUrl = image.Href + fileExtension
+		case kSizeTagM:
+			uploadData.MediumImageUrl = image.Href + fileExtension
+		case kSizeTagL:
+			uploadData.LargeImageUrl = image.Href + fileExtension
+		case kSizeTagXL:
+			uploadData.XLargeImageUrl = image.Href + fileExtension
+		case kSizeTagOrig:
+			uploadData.OrigImageUrl = image.Href + fileExtension
+		}
+	}
+
+	return
 }
 
 func uploadFile(token, filePath, mainAlbumUrl string, uploadDataChan chan UploadData) {
+
 	var uploadData UploadData
-	var err error
+
 	if mainAlbumUrl == "" {
-		mainAlbumUrl, err = getMainAlbumUrl(token)
+		mainAlbumUrl, err := getMainAlbumUrl(token)
 		if err != nil {
-			goto fail
+			uploadData.Error = err
+			uploadDataChan <- uploadData
+			return
 		}
 		uploadData.MainAlbumUrl = mainAlbumUrl
 	}
 
-	responseString, err := doUploadFile(token, filePath, mainAlbumUrl)
+	responseData, err := doUploadFile(token, filePath, mainAlbumUrl)
 	if err != nil {
-		goto fail
+		uploadData.Error = err
+		uploadDataChan <- uploadData
+		return
 	}
 
-	uploadData = doParseUploadResponse(responseString)
-	uploadDataChan <- uploadData
-	return
+	fileExtension := strings.ToLower(path.Ext(filePath))
 
-fail:
-	uploadData.Error = err
+	doParseUploadResponse(responseData, fileExtension, &uploadData)
+
 	uploadDataChan <- uploadData
 	return
 }
 
 // cachedMainAlbumUrl may be empty
 func UploadFile(token, filePath, cachedMainAlbumUrl string, uploadDataChan chan UploadData) {
-	go uploadFile(token, filePath, errChan)
+	go uploadFile(token, filePath, cachedMainAlbumUrl, uploadDataChan)
 }
