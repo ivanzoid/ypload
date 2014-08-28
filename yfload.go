@@ -9,6 +9,7 @@ import (
 	"github.com/skratchdot/open-golang/open"
 	"os"
 	"path"
+	"runtime"
 )
 
 const (
@@ -49,7 +50,7 @@ func init() {
 }
 
 func usage() {
-	appName := path.Base(os.Args[0])
+	appName := appName()
 	fmt.Fprintf(os.Stderr, "%v - upload images to Yandex.Fotki\n", appName)
 	fmt.Fprintf(os.Stderr, "\n")
 	fmt.Fprintf(os.Stderr, "Usage:\n\n")
@@ -65,6 +66,18 @@ func usage() {
 		}
 		fmt.Fprintf(os.Stderr, "\t-%s:\t%s%s\n", flag.Name, flag.Usage, defaultValue)
 	})
+}
+
+func appPlatform() string {
+	os := runtime.GOOS
+	if os == "darwin" {
+		os = "osx"
+	}
+	return os
+}
+
+func appName() string {
+	return path.Base(os.Args[0])
 }
 
 func main() {
@@ -102,7 +115,7 @@ func main() {
 		fmt.Printf("%v", filePath)
 
 		uploadDataChan := make(chan yfotki.UploadData)
-		yfotki.UploadFile(cfg.OauthToken, filePath, cfg.MainAlbumUrl, uploadDataChan)
+		yfotki.UploadFile(cfg.OauthToken, filePath, cfg.MainAlbumUrl, appName(), appPlatform(), uploadDataChan)
 		uploadData := <-uploadDataChan
 		if uploadData.Error != nil {
 			fmt.Printf(": error uploading: %v\n\n", uploadData.Error)

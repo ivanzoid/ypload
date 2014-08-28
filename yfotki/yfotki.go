@@ -14,20 +14,23 @@ import (
 )
 
 const (
-	kServiceDocumentUrl     = "http://api-fotki.yandex.ru/api/me/"
-	kOauthTokenKey          = "oauth_token"
-	kMainAlbumId            = "photo-list"
-	kUploadFieldImageName   = "image"
-	kUploadFieldAccessName  = "access"
-	kUploadFieldAccessValue = "public"
-	kSizeTagXXXS            = "XXXS"
-	kSizeTagXXS             = "XXS"
-	kSizeTagXS              = "XS"
-	kSizeTagS               = "S"
-	kSizeTagM               = "M"
-	kSizeTagL               = "L"
-	kSizeTagXL              = "XL"
-	kSizeTagOrig            = "orig"
+	kServiceDocumentUrl         = "http://api-fotki.yandex.ru/api/me/"
+	kOauthTokenKey              = "oauth_token"
+	kMainAlbumId                = "photo-list"
+	kUploadFieldImageName       = "image"
+	kUploadFieldAccessName      = "access"
+	kUploadFieldAccessValue     = "public"
+	kUploadFieldTitleName       = "title"
+	kUploadFieldPubChannelName  = "pub_channel"
+	kUploadFieldAppPlatformName = "app_platform"
+	kSizeTagXXXS                = "XXXS"
+	kSizeTagXXS                 = "XXS"
+	kSizeTagXS                  = "XS"
+	kSizeTagS                   = "S"
+	kSizeTagM                   = "M"
+	kSizeTagL                   = "L"
+	kSizeTagXL                  = "XL"
+	kSizeTagOrig                = "orig"
 )
 
 type UploadData struct {
@@ -80,7 +83,7 @@ func getMainAlbumUrl(token string) (mainAlbumUrl string, err error) {
 	return
 }
 
-func doUploadFile(token, filePath, mainAlbumUrl string) (responseData []byte, err error) {
+func doUploadFile(token, filePath, mainAlbumUrl, appName, appPlatform string) (responseData []byte, err error) {
 	var bodyBuffer bytes.Buffer
 	writer := multipart.NewWriter(&bodyBuffer)
 	formWriter, err := writer.CreateFormFile(kUploadFieldImageName, filePath)
@@ -99,6 +102,14 @@ func doUploadFile(token, filePath, mainAlbumUrl string) (responseData []byte, er
 	}
 
 	writer.WriteField(kUploadFieldAccessName, kUploadFieldAccessValue)
+
+	fileName := path.Base(filePath)
+	title := strings.TrimSuffix(fileName, path.Ext(fileName))
+	writer.WriteField(kUploadFieldTitleName, title)
+
+	writer.WriteField(kUploadFieldPubChannelName, appName)
+	writer.WriteField(kUploadFieldAppPlatformName, appPlatform)
+
 	err = writer.Close()
 	if err != nil {
 		return
@@ -172,7 +183,7 @@ func doParseUploadResponse(responseData []byte, fileExtension string, uploadData
 	return
 }
 
-func uploadFile(token, filePath, mainAlbumUrl string, uploadDataChan chan UploadData) {
+func uploadFile(token, filePath, mainAlbumUrl, appName, appPlatform string, uploadDataChan chan UploadData) {
 
 	var uploadData UploadData
 
@@ -186,7 +197,7 @@ func uploadFile(token, filePath, mainAlbumUrl string, uploadDataChan chan Upload
 		uploadData.MainAlbumUrl = mainAlbumUrl
 	}
 
-	responseData, err := doUploadFile(token, filePath, mainAlbumUrl)
+	responseData, err := doUploadFile(token, filePath, mainAlbumUrl, appName, appPlatform)
 	if err != nil {
 		uploadData.Error = err
 		uploadDataChan <- uploadData
@@ -202,6 +213,6 @@ func uploadFile(token, filePath, mainAlbumUrl string, uploadDataChan chan Upload
 }
 
 // cachedMainAlbumUrl may be empty
-func UploadFile(token, filePath, cachedMainAlbumUrl string, uploadDataChan chan UploadData) {
-	go uploadFile(token, filePath, cachedMainAlbumUrl, uploadDataChan)
+func UploadFile(token, filePath, cachedMainAlbumUrl, appName, appPlatform string, uploadDataChan chan UploadData) {
+	go uploadFile(token, filePath, cachedMainAlbumUrl, appName, appPlatform, uploadDataChan)
 }
