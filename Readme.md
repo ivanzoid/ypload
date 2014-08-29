@@ -1,4 +1,4 @@
-# `yfload`
+# yfload
 
 `yfload` is utility for uploading image files to Yandex.Fotki service.
 
