@@ -15,6 +15,7 @@ import (
 const (
 	kAppId               = "e2b26273dab84121bf3f9c2be4bb8915"
 	kLocalHttpServerPort = 30171
+	kVersion             = "1.0"
 )
 
 var (
@@ -51,7 +52,9 @@ func init() {
 
 func usage() {
 	appName := appName()
-	fmt.Fprintf(os.Stderr, "%v - upload images to Yandex.Fotki\n", appName)
+	fmt.Fprintf(os.Stderr, "\n")
+	fmt.Fprintf(os.Stderr, "    %v - upload images to Yandex.Fotki\n", appName)
+	fmt.Fprintf(os.Stderr, "    version %v\n", kVersion)
 	fmt.Fprintf(os.Stderr, "\n")
 	fmt.Fprintf(os.Stderr, "Usage:\n\n")
 	fmt.Fprintf(os.Stderr, "\t%v [options] <imageFile1> [<imageFile2> ...]\n", appName)
