@@ -1,4 +1,4 @@
-# yfload
+# `yfload`
 
 `yfload` is utility for uploading image files to Yandex.Fotki service.
 
@@ -12,7 +12,7 @@
 - If you are not on OS X or wish to compile from source:
  - Get Go compiler (`apt-get install go` for Ubuntu/Debian)
  - `go get ./...`
- - `go guild yfload.go`
+ - `go build yfload.go`
 
 ## Author
 
@@ -20,4 +20,4 @@ Ivan Zezyulya, yfload@zoid.cc
 
 ## License
 
-yfload is available under the MIT license. See the LICENSE file for more info.
+`yfload` is available under the MIT license. See the LICENSE file for more info.
