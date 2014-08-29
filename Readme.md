@@ -10,9 +10,9 @@
 
 - If you are on OS X, you may grab binary here: https://github.com/ivanzoid/yfload-bin/releases
 - If you are not on OS X or wish to compile from source:
- - Get Go compiler (`apt-get install golang` for Ubuntu/Debian)
- - `go get ./...`
- - `go build yfload.go`
+ - Get Go compiler, version >= 1.3 is required (`apt-get install golang` for Ubuntu/Debian)
+ - `GOPATH=/tmp go get ./...`
+ - `GOPATH=/tmp go build yfload.go`
 
 ## Author
 
