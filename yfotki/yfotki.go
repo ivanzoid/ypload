@@ -116,6 +116,7 @@ func doUploadFile(token, filePath, mainAlbumUrl, appName, appPlatform string) (r
 	}
 
 	url := fmt.Sprintf("%v?%v=%v", mainAlbumUrl, kOauthTokenKey, token)
+
 	request, err := http.NewRequest("POST", url, &bodyBuffer)
 	if err != nil {
 		return
@@ -188,7 +189,8 @@ func uploadFile(token, filePath, mainAlbumUrl, appName, appPlatform string, uplo
 	var uploadData UploadData
 
 	if mainAlbumUrl == "" {
-		mainAlbumUrl, err := getMainAlbumUrl(token)
+		var err error
+		mainAlbumUrl, err = getMainAlbumUrl(token)
 		if err != nil {
 			uploadData.Error = err
 			uploadDataChan <- uploadData
