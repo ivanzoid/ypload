@@ -17,7 +17,7 @@ import (
 const (
 	kAppId               = "e2b26273dab84121bf3f9c2be4bb8915"
 	kLocalHttpServerPort = 30171
-	kVersion             = "1.0"
+	kVersion             = "1.0.1"
 )
 
 var (
