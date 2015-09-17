@@ -3,6 +3,7 @@ package yfotki
 import (
 	"bytes"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -190,7 +191,8 @@ func uploadFile(token, filePath, mainAlbumUrl, appName, appPlatform string, uplo
 	if mainAlbumUrl == "" {
 		mainAlbumUrl, err := getMainAlbumUrl(token)
 		if err != nil {
-			uploadData.Error = err
+			errorText := fmt.Sprintf("Error getting main album url: %v", err)
+			uploadData.Error = errors.New(errorText)
 			uploadDataChan <- uploadData
 			return
 		}

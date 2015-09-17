@@ -1,15 +1,17 @@
 package main
 
 import (
-	"./config"
-	"./yfotki"
-	"./ylogin"
 	"flag"
 	"fmt"
-	"github.com/skratchdot/open-golang/open"
 	"os"
 	"path"
 	"runtime"
+
+	"github.com/skratchdot/open-golang/open"
+
+	"github.com/ivanzoid/yfload/config"
+	"github.com/ivanzoid/yfload/yfotki"
+	"github.com/ivanzoid/yfload/ylogin"
 )
 
 const (

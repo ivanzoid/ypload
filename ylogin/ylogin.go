@@ -2,9 +2,10 @@ package ylogin
 
 import (
 	"fmt"
-	"github.com/braintree/manners"
 	"net/http"
 	"strconv"
+
+	"github.com/braintree/manners"
 )
 
 const (
@@ -61,17 +62,19 @@ func (handler OauthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("Got token.\n")
 		fmt.Fprintf(w, "%v", kDoneHtmlTemplate)
 
-		handler.server.Shutdown <- true
+		handler.server.Close()
 		handler.doneChan <- true
 	}
 }
 
 func acquireOauthToken(localHttpServerPort int, tokenDataChan chan TokenData) {
-	server := manners.NewServer()
-	addressString := fmt.Sprintf(":%d", localHttpServerPort)
-	handler := OauthHandler{server: server, tokenData: &TokenData{}, doneChan: make(chan bool)}
+	var server http.Server
+	server.Addr = fmt.Sprintf(":%d", localHttpServerPort)
+	mannersServer := manners.NewWithServer(&server)
+	handler := OauthHandler{server: mannersServer, tokenData: &TokenData{}, doneChan: make(chan bool)}
+	server.Handler = handler
 
-	go server.ListenAndServe(addressString, handler)
+	go mannersServer.ListenAndServe()
 
 	<-handler.doneChan
 
