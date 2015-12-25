@@ -9,9 +9,9 @@ import (
 
 	"github.com/skratchdot/open-golang/open"
 
-	"github.com/ivanzoid/yfload/config"
-	"github.com/ivanzoid/yfload/yfotki"
-	"github.com/ivanzoid/yfload/ylogin"
+	"github.com/ivanzoid/ypload/config"
+	"github.com/ivanzoid/ypload/yfotki"
+	"github.com/ivanzoid/ypload/ylogin"
 )
 
 const (

@@ -16,7 +16,7 @@ type Config struct {
 }
 
 const (
-	kConfigFileDir  = ".yfload"
+	kConfigFileDir  = ".ypload"
 	kConfigFileName = "config.json"
 )
 

@@ -1,23 +1,24 @@
-# yfload
+# ypload
 
-`yfload` is utility for uploading image files to Yandex.Fotki service.
+`ypload` is utility for uploading image files to Yandex.Fotki service.
 
 ## Usage
 
-    yfload <imageFile>
+    ypload <imageFile>
 
 ## Installation
 
-- If you are on OS X, you may grab binary here: https://github.com/ivanzoid/yfload-bin/releases
-- If you are not on OS X or wish to compile from source:
- - Get Go compiler, version >= 1.3 is required (`apt-get install golang` for Ubuntu/Debian)
- - `GOPATH=/tmp go get ./...`
- - `GOPATH=/tmp go build yfload.go`
+- If you have Go installed (install with `apt-get install golang` for Ubuntu/Debian, `brew install go` with Homebrew on OS X):
+0. Make sure you have set `GOPATH` environment variable (to some existing folder, ~/go for example)
+1. `go get install ypload`
+2. If your `PATH` contains `GOPATH`, then just run as `ypload ...`, otherwise run as `$GOPATH/bin/ypload ...`
+
+- If you don't have (and/or don't want) Go installed: grab binary in releases tab.
 
 ## Author
 
-Ivan Zezyulya, yfload@zoid.cc
+Ivan Zezyulya, ypload@zoid.cc
 
 ## License
 
-`yfload` is available under the MIT license. See the LICENSE file for more info.
+`ypload` is available under the MIT license. See the LICENSE file for more info.
